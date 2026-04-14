@@ -181,6 +181,22 @@
   .met-cb-label { font-size:13px; font-weight:600; color:var(--text-muted); transition:color 0.2s; }
   .met-cb-wrap.checked .met-cb-label { color:var(--accent-done); }
 
+  /* WHO MET */
+  .who-select-wrap {
+    display:flex; align-items:center; gap:8px; margin-top:8px; padding-left:8px;
+  }
+  .who-label { font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+  .who-select {
+    flex:1; background:var(--search-bg); border:1px solid var(--card-border);
+    border-radius:8px; padding:7px 10px; font-size:13px; color:var(--text);
+    font-family:inherit; outline:none; appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center;
+    cursor:pointer; transition:border-color 0.2s;
+  }
+  .who-select:focus { border-color:var(--accent-sc); }
+  .who-select option { background:var(--card-bg); color:var(--text); }
+
   /* EXPAND */
   .expand-btn {
     display:flex; align-items:center; justify-content:center;
@@ -342,6 +358,7 @@ let currentView = 'time';
 let currentTab = 'planned';
 let metSet = new Set(JSON.parse(localStorage.getItem('rs2026_met') || '[]'));
 let notesMap = JSON.parse(localStorage.getItem('rs2026_notes') || '{}');
+let whoMetMap = JSON.parse(localStorage.getItem('rs2026_who') || '{}');
 
 function getTimeSort(t) {
   if (!t || t === 'do weryfikacji') return 9999;
@@ -386,6 +403,15 @@ function renderCard(c, idx) {
           <span class="met-cb-label">${isMet ? 'Spotkanie odbyte ✓' : 'Po spotkaniu'}</span>
         </div>
       </div>
+      <div class="who-select-wrap">
+        <span class="who-label">Kto się spotykał:</span>
+        <select class="who-select" onchange="saveWho('${escapedName}', this.value)">
+          <option value="">— wybierz —</option>
+          <option value="Tomasz" ${(whoMetMap[c.name]||'')==='Tomasz'?'selected':''}>Tomasz</option>
+          <option value="Łukasz" ${(whoMetMap[c.name]||'')==='Łukasz'?'selected':''}>Łukasz</option>
+          <option value="Obaj" ${(whoMetMap[c.name]||'')==='Obaj'?'selected':''}>Obaj</option>
+        </select>
+      </div>
       <button class="expand-btn" onclick="toggleExpand(${idx})">
         <span>Szczegóły</span>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -414,6 +440,11 @@ function renderCard(c, idx) {
         </div>
       </div>
     </div>`;
+}
+
+function saveWho(name, val) {
+  whoMetMap[name] = val;
+  localStorage.setItem('rs2026_who', JSON.stringify(whoMetMap));
 }
 
 let noteTimers = {};
