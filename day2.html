@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Spotkania SpendGuru — Retail Summit 2026 · Dzień 2</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --card-border: #2a2d3a;
+    --accent-fin: #f59e0b;
+    --accent-people: #ec4899;
+    --accent-done: #10b981;
+    --accent-flag: #ef4444;
+    --text: #e5e7eb;
+    --text-muted: #9ca3af;
+    --text-bright: #ffffff;
+    --search-bg: #1e2130;
+    --chip-bg: #1e2130;
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding-top: var(--safe-top);
+    padding-bottom: calc(var(--safe-bottom) + 16px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* DAY NAV */
+  .day-nav {
+    display:flex; gap:0; background:#12141c;
+    border-bottom:1px solid var(--card-border);
+    padding:8px 16px; position:sticky; top:0; z-index:200;
+  }
+  .day-link {
+    flex:1; text-align:center; padding:10px 0; border-radius:10px;
+    font-size:14px; font-weight:700; text-decoration:none;
+    color:var(--text-muted); transition:all 0.2s;
+  }
+  .day-link.active {
+    background:rgba(245,158,11,0.15); color:var(--accent-fin);
+  }
+  .day-link:not(.active):active { opacity:0.7; }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 52px; z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: 12px 16px 0; border-bottom: 1px solid var(--card-border);
+  }
+  .header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .header h1 { font-size:17px; font-weight:700; color:var(--text-bright); letter-spacing:-0.3px; line-height:1.3; }
+  .header .date-badge {
+    font-size:11px; color:var(--accent-fin); background:rgba(245,158,11,0.12);
+    padding:3px 9px; border-radius:12px; font-weight:600; flex-shrink:0; margin-left:8px;
+  }
+  .stats-row { display:flex; gap:14px; margin-bottom:8px; }
+  .stat { font-size:11px; color:var(--text-muted); }
+  .stat strong { color:var(--text-bright); font-size:15px; display:block; }
+
+  /* MAIN TABS */
+  .main-tabs {
+    display:flex; gap:0; background:var(--search-bg);
+    border-radius:10px; margin:0 0 8px; padding:3px;
+    border:1px solid var(--card-border);
+  }
+  .main-tab {
+    flex:1; padding:8px 0; text-align:center; font-size:13px; font-weight:600;
+    color:var(--text-muted); background:transparent; border:none;
+    border-radius:8px; cursor:pointer; transition:all 0.2s; position:relative;
+  }
+  .main-tab.active { background:var(--card-bg); color:var(--text-bright); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+  .main-tab .tab-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:18px; height:18px; border-radius:9px; font-size:10px; font-weight:700;
+    margin-left:6px; padding:0 5px;
+  }
+  .main-tab[data-tab="planned"] .tab-badge { background:rgba(245,158,11,0.2); color:var(--accent-fin); }
+  .main-tab[data-tab="done"] .tab-badge { background:rgba(16,185,129,0.2); color:var(--accent-done); }
+
+  /* SEARCH */
+  .search-wrap { position:relative; margin-bottom:8px; }
+  .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted); }
+  .search-input {
+    width:100%; background:var(--search-bg); border:1px solid var(--card-border);
+    border-radius:12px; padding:10px 12px 10px 36px; font-size:15px;
+    color:var(--text); outline:none; transition:border-color 0.2s;
+  }
+  .search-input:focus { border-color:var(--accent-fin); }
+  .search-input::placeholder { color:var(--text-muted); }
+
+  /* CHIPS */
+  .chips-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:0 -16px; padding:0 16px 8px; }
+  .chips-scroll::-webkit-scrollbar { display:none; }
+  .chips { display:flex; gap:8px; white-space:nowrap; }
+  .chip {
+    display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+    border-radius:20px; font-size:12px; font-weight:600;
+    background:var(--chip-bg); border:1px solid var(--card-border);
+    color:var(--text-muted); cursor:pointer; transition:all 0.2s; flex-shrink:0;
+  }
+  .chip.active { color:var(--text-bright); border-color:transparent; }
+  .chip .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .chip[data-filter="all"].active { background:#2a3050; }
+  .chip[data-filter="fin"] .dot { background:var(--accent-fin); }
+  .chip[data-filter="fin"].active { background:rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.3); }
+  .chip[data-filter="people"] .dot { background:var(--accent-people); }
+  .chip[data-filter="people"].active { background:rgba(236,72,153,0.18); border-color:rgba(236,72,153,0.3); }
+  .chip[data-filter="priority"].active { background:rgba(239,68,68,0.18); border-color:rgba(239,68,68,0.3); color:var(--accent-flag); }
+
+  /* VIEW TOGGLE */
+  .view-toggle { display:flex; gap:0; margin:8px 16px 0; background:var(--search-bg); border-radius:10px; padding:3px; border:1px solid var(--card-border); }
+  .view-btn {
+    flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600;
+    color:var(--text-muted); background:transparent; border:none;
+    border-radius:8px; cursor:pointer; transition:all 0.2s;
+  }
+  .view-btn.active { background:var(--card-bg); color:var(--text-bright); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+
+  /* CONTENT */
+  .content { padding:8px 16px 32px; }
+
+  /* TIME GROUPS */
+  .time-group { margin-top:16px; }
+  .time-label {
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+    position:sticky; top:252px; z-index:10;
+    background:rgba(15,17,23,0.85); backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px); padding:6px 0;
+  }
+  .time-label .time { font-size:14px; font-weight:700; color:var(--text-bright); white-space:nowrap; }
+  .time-label .line { flex:1; height:1px; background:var(--card-border); }
+
+  /* CARD */
+  .card {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:14px; padding:14px; margin-bottom:10px;
+    transition:transform 0.15s, box-shadow 0.15s;
+    position:relative; overflow:hidden;
+  }
+  .card:active { transform:scale(0.98); }
+  .card .stage-indicator { position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:14px 0 0 14px; }
+  .card[data-stage="fin"] .stage-indicator { background:var(--accent-fin); }
+  .card[data-stage="people"] .stage-indicator { background:var(--accent-people); }
+
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; padding-left:8px; padding-right:30px; }
+  .card-name { font-size:15px; font-weight:700; color:var(--text-bright); line-height:1.3; }
+  .flag-badge { color:var(--accent-flag); font-size:14px; margin-left:6px; }
+  .card-title { font-size:12px; color:#818cf8; font-weight:500; padding-left:8px; margin-bottom:2px; }
+  .card-company { font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:8px; padding-left:8px; }
+  .day1-badge {
+    display:inline-block; font-size:9px; font-weight:700; padding:2px 6px;
+    border-radius:4px; background:rgba(79,140,255,0.15); color:#4f8cff;
+    margin-left:6px; vertical-align:middle;
+  }
+  .card-meta { display:flex; flex-wrap:wrap; gap:6px; padding-left:8px; }
+  .meta-tag {
+    display:inline-flex; align-items:center; gap:4px; font-size:11px;
+    color:var(--text-muted); background:rgba(255,255,255,0.04);
+    padding:3px 8px; border-radius:6px;
+  }
+  .meta-tag svg { width:12px; height:12px; flex-shrink:0; }
+  .floor-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
+  .floor-0 { background:rgba(79,140,255,0.12); color:#4f8cff; }
+  .floor-1 { background:rgba(245,158,11,0.12); color:var(--accent-fin); }
+
+  /* MET CHECKBOX */
+  .met-row { display:flex; align-items:center; gap:8px; margin-top:10px; padding-left:8px; }
+  .met-cb-wrap {
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    padding:6px 12px; border-radius:10px; border:1px solid var(--card-border);
+    background:rgba(255,255,255,0.02); transition:all 0.2s; flex:1;
+  }
+  .met-cb-wrap:active { transform:scale(0.97); }
+  .met-cb-wrap.checked { background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3); }
+  .met-cb {
+    width:22px; height:22px; border-radius:6px; border:2px solid var(--card-border);
+    background:transparent; flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; transition:all 0.2s;
+  }
+  .met-cb svg { width:14px; height:14px; color:transparent; }
+  .met-cb-wrap.checked .met-cb { background:var(--accent-done); border-color:var(--accent-done); }
+  .met-cb-wrap.checked .met-cb svg { color:#fff; }
+  .met-cb-label { font-size:13px; font-weight:600; color:var(--text-muted); transition:color 0.2s; }
+  .met-cb-wrap.checked .met-cb-label { color:var(--accent-done); }
+
+  /* WHO MET */
+  .who-select-wrap { display:flex; align-items:center; gap:8px; margin-top:8px; padding-left:8px; }
+  .who-label { font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+  .who-select {
+    flex:1; background:var(--search-bg); border:1px solid var(--card-border);
+    border-radius:8px; padding:7px 10px; font-size:13px; color:var(--text);
+    font-family:inherit; outline:none; appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center;
+    cursor:pointer; transition:border-color 0.2s;
+  }
+  .who-select:focus { border-color:var(--accent-fin); }
+  .who-select option { background:var(--card-bg); color:var(--text); }
+
+  /* EXPAND */
+  .expand-btn {
+    display:flex; align-items:center; justify-content:center;
+    padding:6px 0 0; margin-left:8px; background:none; border:none;
+    color:var(--text-muted); font-size:11px; cursor:pointer; gap:4px;
+  }
+  .expand-btn svg { width:14px; height:14px; transition:transform 0.2s; }
+  .card.expanded .expand-btn svg { transform:rotate(180deg); }
+
+  /* DETAILS */
+  .card-details { margin-top:8px; padding-left:8px; display:none; }
+  .card.expanded .card-details { display:block; }
+  .detail-section {
+    margin-top:8px; padding:8px 10px 8px 12px;
+    background:rgba(255,255,255,0.03); border-radius:8px;
+    font-size:12px; color:var(--text-muted); line-height:1.5;
+    border-left:2px solid var(--card-border);
+  }
+  .detail-section.section-desc { border-left-color:#6366f1; }
+  .detail-section.section-topics { border-left-color:#f59e0b; }
+  .detail-section.section-sg { border-left-color:#10b981; }
+  .detail-section.section-notes { border-left-color:#ec4899; background:rgba(236,72,153,0.04); }
+  .detail-label {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.5px; margin-bottom:4px; display:flex; align-items:center; gap:4px;
+  }
+  .detail-label.lbl-panel { color:#9ca3af; }
+  .detail-label.lbl-desc { color:#818cf8; }
+  .detail-label.lbl-topics { color:#fbbf24; }
+  .detail-label.lbl-sg { color:#34d399; }
+  .detail-label.lbl-notes { color:#f472b6; }
+  .detail-label svg { width:11px; height:11px; }
+
+  /* NOTES */
+  .notes-textarea {
+    width:100%; min-height:60px; background:rgba(255,255,255,0.03);
+    border:1px solid var(--card-border); border-radius:8px;
+    padding:8px 10px; font-size:13px; color:var(--text);
+    font-family:inherit; resize:vertical; outline:none;
+    transition:border-color 0.2s;
+  }
+  .notes-textarea:focus { border-color:#ec4899; }
+  .notes-textarea::placeholder { color:var(--text-muted); font-size:12px; }
+  .notes-saved { font-size:10px; color:#f472b6; margin-top:4px; opacity:0; transition:opacity 0.3s; }
+  .notes-saved.show { opacity:1; }
+
+  /* MISC */
+  .no-results { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .no-results svg { width:48px; height:48px; margin-bottom:12px; opacity:0.3; }
+  .no-results p { font-size:14px; }
+  .counter { font-size:11px; color:var(--text-muted); text-align:center; padding:16px 0 0; }
+  .empty-tab { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .empty-tab .icon { font-size:40px; margin-bottom:12px; }
+  .empty-tab p { font-size:14px; line-height:1.5; }
+
+  @media (min-width:768px) {
+    .content { max-width:480px; margin:0 auto; }
+    .header > * { max-width:480px; margin-left:auto; margin-right:auto; }
+    .view-toggle { max-width:480px; margin-left:auto; margin-right:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="day-nav">
+  <a href="index.html" class="day-link">Dzień 1 · 14 kwi</a>
+  <a href="day2.html" class="day-link active">Dzień 2 · 15 kwi</a>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🎯 Spotkania SpendGuru<br>Retail Summit 2026</h1>
+    <span class="date-badge">15 kwietnia · Dzień 2</span>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><strong id="totalCount">0</strong>Kontakty</div>
+    <div class="stat"><strong id="metCount">0</strong>Odbyte</div>
+    <div class="stat"><strong id="remainCount">0</strong>Pozostało</div>
+    <div class="stat"><strong id="flagCount">0</strong>🚩 Priorytet</div>
+  </div>
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="planned" onclick="setMainTab('planned')">
+      Zaplanowane <span class="tab-badge" id="plannedBadge">0</span>
+    </button>
+    <button class="main-tab" data-tab="done" onclick="setMainTab('done')">
+      Odbyte <span class="tab-badge" id="doneBadge">0</span>
+    </button>
+  </div>
+  <div class="search-wrap">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input type="text" class="search-input" id="searchInput" placeholder="Szukaj osoby, firmy, tematu…" autocomplete="off" autocorrect="off">
+  </div>
+  <div class="chips-scroll">
+    <div class="chips">
+      <div class="chip active" data-filter="all" onclick="setFilter('all')">Wszystkie</div>
+      <div class="chip" data-filter="priority" onclick="setFilter('priority')">🚩 Priorytet</div>
+      <div class="chip" data-filter="fin" onclick="setFilter('fin')"><span class="dot"></span>Financial</div>
+      <div class="chip" data-filter="people" onclick="setFilter('people')"><span class="dot"></span>People & Tech</div>
+    </div>
+  </div>
+</div>
+
+<div class="view-toggle">
+  <button class="view-btn active" data-view="time" onclick="setView('time')">Wg czasu</button>
+  <button class="view-btn" data-view="stage" onclick="setView('stage')">Wg sceny</button>
+  <button class="view-btn" data-view="alpha" onclick="setView('alpha')">A–Z</button>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const RAW = [
+  // ═══ FINANCIAL LEADERSHIP, RISK & VALUE CREATION STAGE ═══
+  {name:"Wojciech Wieroński",company:"PHH GROUP",title:"Global CFO - Retail / E-commerce / Pharma",time:"09:10–09:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Wzmacnianie odporności finansowej przy jednoczesnym radzeniu sobie z wieloźródłową zmiennością, presją regulacyjną i rosnącą ekspozycją na ryzyka cyfrowe",desc:"Grupa retail/e-commerce/pharma – zarządzanie finansami na poziomie globalnym",topics:"Odporność finansowa · Wieloźródłowa zmienność kosztów · Planowanie scenariuszowe",sg:"Pełna widoczność wydatków pośrednich w grupie kapitałowej",flag:true},
+  {name:"Magdalena Zalas",company:"ISPOT",title:"Head of Controlling",time:"09:10–09:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Wzmacnianie odporności finansowej przy jednoczesnym radzeniu sobie z wieloźródłową zmiennością, presją regulacyjną i rosnącą ekspozycją na ryzyka cyfrowe",desc:"Premium retailer Apple (iSpot) – sieć sklepów",topics:"Controlling kosztów operacyjnych · Wahania popytu · Presja na marże",sg:"Narzędzie do analizy i benchmarkowania kosztów sieci sklepów",flag:true},
+  {name:"Amadeusz Szpiter",company:"UNILEVER",title:"BMI Finance Lead for Europe",time:"09:10–09:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Wzmacnianie odporności finansowej przy jednoczesnym radzeniu sobie z wieloźródłową zmiennością, presją regulacyjną i rosnącą ekspozycją na ryzyka cyfrowe",desc:"Globalny FMCG – finanse na poziomie europejskim",topics:"Zmienność kosztów surowców i usług · Standaryzacja procesów finansowych",sg:"Identyfikacja rozjazdów kosztowych w procurement poza core",flag:true},
+  {name:"Mariusz Zapiór",company:"X-KOM & NEONET",title:"VP Board Member / CFO x-kom & Neonet",time:"09:10–09:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Wzmacnianie odporności finansowej przy jednoczesnym radzeniu sobie z wieloźródłową zmiennością, presją regulacyjną i rosnącą ekspozycją na ryzyka cyfrowe",desc:"E-commerce elektroniki – duża sieć retail",topics:"Zarządzanie ryzykiem finansowym · Koszty operacyjne sieci i e-commerce",sg:"Transparentność wydatków w dwóch zintegrowanych markach retail",flag:true},
+  {name:"Paulina Bzymek-Iwanowicz",company:"EY",title:"Partner",time:"09:10–09:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Wzmacnianie odporności finansowej przy jednoczesnym radzeniu sobie z wieloźródłową zmiennością, presją regulacyjną i rosnącą ekspozycją na ryzyka cyfrowe",desc:"Doradztwo Big4",topics:"Audyt, doradztwo finansowe i risk management",sg:"",flag:false},
+  {name:"Ewa Weinar",company:"NATURA",title:"Corporate Counsel",time:"09:50–10:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Koordynowanie reakcji na ryzyka w wymiarach finansowym, operacyjnym i regulacyjnym w warunkach zmienności",desc:"Sieć drogerii i e-commerce",topics:"Ryzyka regulacyjne i compliance · Koordynacja reakcji na zmienność",sg:"Zbiorcza kontrola wydatków digital i prawnych",flag:false,day1:true},
+  {name:"Barbara Robaszkiewicz",company:"BEIERSDORF",title:"CEO",time:"09:50–10:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Koordynowanie reakcji na ryzyka w wymiarach finansowym, operacyjnym i regulacyjnym w warunkach zmienności",desc:"Globalny producent kosmetyków (Nivea, Eucerin)",topics:"Zmienność kosztowa dużej organizacji · Ryzyka operacyjne i regulacyjne",sg:"Analiza wydatków poza produkcją – usługi, IT, marketing",flag:true},
+  {name:"Natalia Korzeniecka-Walak",company:"EMPIK",title:"Chief People, Legal and Corporate Affairs Officer, Board Member",time:"09:50–10:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Koordynowanie reakcji na ryzyka w wymiarach finansowym, operacyjnym i regulacyjnym w warunkach zmienności",desc:"Największa sieć księgarń i rozrywki, e-commerce",topics:"Ryzyka compliance · Koszty transformacji cyfrowej · Governance",sg:"Widoczność kosztów usług i IT w sieci omnichannel",flag:true},
+  {name:"Agnieszka Bryl",company:"EY",title:"Consulting, Enterprise Risk, Partner",time:"09:50–10:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Koordynowanie reakcji na ryzyka w wymiarach finansowym, operacyjnym i regulacyjnym w warunkach zmienności",desc:"Doradztwo Big4",topics:"Zarządzanie ryzykiem przedsiębiorstwa",sg:"",flag:false},
+  {name:"Cezary Giza",company:"DIGIMART",title:"CEO",time:"11:00–11:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ujednolicanie jakości danych, pomiaru retail media i kontroli personalizacji w celu poprawy decyzji finansowych",desc:"Marketing cyfrowy i retail media",topics:"Wartość danych · Retail media · Atrybucja i personalizacja",sg:"",flag:false},
+  {name:"Konrad Marchlewski",company:"BEWA SP Z O.O.",title:"Wiceprezes Zarządu",time:"11:00–11:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ujednolicanie jakości danych, pomiaru retail media i kontroli personalizacji w celu poprawy decyzji finansowych",desc:"Dystrybucja i hurt",topics:"Jakość danych finansowych · Pomiar i kontrola efektywności",sg:"Analiza struktury wydatków dystrybucyjnych",flag:true},
+  {name:"Maciej Wypych",company:"CASTORAMA POLSKA",title:"Dyrektor ds. Danych Podstawowych Produktu i Kontentu",time:"11:00–11:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ujednolicanie jakości danych, pomiaru retail media i kontroli personalizacji w celu poprawy decyzji finansowych",desc:"Sieć DIY retail (Kingfisher Group)",topics:"Master data management · Jakość danych produktowych",sg:"Dane jako fundament analizy kosztowej",flag:false},
+  {name:"Tomasz Sławiński",company:"IMPERIAL BRANDS",title:"IT Cost Manager",time:"11:00–11:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ujednolicanie jakości danych, pomiaru retail media i kontroli personalizacji w celu poprawy decyzji finansowych",desc:"Globalny producent wyrobów tytoniowych",topics:"Zarządzanie kosztami IT · Kontrola budżetów technologicznych",sg:"SpendGuru jako narzędzie do zarządzania i benchmarkowania kosztów IT",flag:true},
+  {name:"Jakub Chmielniak",company:"CARPATREE",title:"Owner",time:"12:10–12:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Gdy presja właścicielska spotyka granice skali, priorytety przywódcze muszą zostać przełożone na wykonalne wybory",desc:"E-commerce odzież sportowa (D2C)",topics:"Presja właścicielska · Skalowanie biznesu · Granice wzrostu",sg:"Kontrola kosztów przy szybkim wzroście D2C",flag:false},
+  {name:"Łukasz Turczyński",company:"BOLT FOOD",title:"Senior General Manager",time:"12:10–12:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Gdy presja właścicielska spotyka granice skali, priorytety przywódcze muszą zostać przełożone na wykonalne wybory",desc:"Platforma food delivery",topics:"Wzrost vs rentowność · Koszty operacyjne platformy",sg:"Dyscyplina kosztowa w modelu delivery",flag:false},
+  {name:"Kamil Puk",company:"DISPLATE",title:"Chief of Staff",time:"12:10–12:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Gdy presja właścicielska spotyka granice skali, priorytety przywódcze muszą zostać przełożone na wykonalne wybory",desc:"E-commerce – dekoracje metalowe (D2C globalny)",topics:"Skalowanie e-commerce · Zdolność egzekucyjna organizacji",sg:"Widoczność kosztów przy globalnej ekspansji",flag:false},
+  {name:"Marcin Stańczyk",company:"ECO & MORE",title:"President of the Management Board",time:"12:10–12:50",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Gdy presja właścicielska spotyka granice skali, priorytety przywódcze muszą zostać przełożone na wykonalne wybory",desc:"Produkty ekologiczne / zrównoważone",topics:"Zarządzanie wzrostem · Priorytety przywódcze · Realia ekonomiczne",sg:"Porządkowanie wydatków w rosnącej firmie",flag:true},
+  {name:"Robert Knapczyk",company:"SHELL POLSKA",title:"Dyrektor Finansowy, Board Member",time:"14:00–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie priorytetów przywódczych równoważących oczekiwania właścicieli, ambicje strategiczne i realia ekonomiczne / Ukierunkowywanie wartości przedsiębiorstwa",desc:"Paliwa i retail stacyjny",topics:"Architektura wartości · Priorytety strategiczne · Dyscyplina finansowa",sg:"FM, energia, usługi – kontrola kosztów obiektowych",flag:true,day1:true},
+  {name:"Daniel Prałat",company:"GRUPA CHATA POLSKA",title:"Członek Zarządu",time:"14:00–14:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie priorytetów przywódczych równoważących oczekiwania właścicieli, ambicje strategiczne i realia ekonomiczne",desc:"Franczyzowa sieć supermarketów",topics:"Priorytety inwestycyjne · Balans między ambicją a zasobami",sg:"Benchmarking kosztów usług i operacji w sieci franczyzowej",flag:true},
+  {name:"Marek Marzec",company:"PPH EWA BIS SP.Z.O.O.",title:"Członek Zarządu",time:"14:00–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie priorytetów przywódczych / Ukierunkowywanie wartości przedsiębiorstwa",desc:"Dystrybucja FMCG i artykułów chemicznych",topics:"Wartość przedsiębiorstwa · Oczekiwania właścicielskie · Dyscyplina finansowa",sg:"Przejrzystość kosztów dystrybucji i logistyki",flag:true},
+  {name:"Wojciech Trochymiak",company:"ROCHE",title:"Finance and Service Director",time:"14:00–14:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie priorytetów przywódczych równoważących oczekiwania właścicieli, ambicje strategiczne i realia ekonomiczne",desc:"Globalny koncern farmaceutyczny",topics:"Kontrola kosztów usługowych · Odporność finansowa · Realia ekonomiczne",sg:"Analiza wydatków na usługi, serwis i facility management",flag:true},
+  {name:"Tomasz Michniewicz",company:"X-KOM BIZNES",title:"CEO",time:"14:00–14:40",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie priorytetów przywódczych równoważących oczekiwania właścicieli, ambicje strategiczne i realia ekonomiczne",desc:"E-commerce B2B – elektronika i IT",topics:"Skalowanie B2B · Architektura wartości · Wybory przywódcze",sg:"Kontrola kosztów operacyjnych w modelu B2B",flag:true},
+  {name:"Maciej Stefaniak",company:"PwC Polska",title:"Director",time:"14:40–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ukierunkowywanie wartości przedsiębiorstwa poprzez równoważenie długoterminowej wizji, zdolności egzekucyjnych i dyscypliny finansowej",desc:"Doradztwo Big4",topics:"Wartość przedsiębiorstwa · Governance",sg:"",flag:false},
+  {name:"Tomasz Mietiulka",company:"SUPER-PHARM POLSKA",title:"CFO, Board Member",time:"14:40–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ukierunkowywanie wartości przedsiębiorstwa poprzez równoważenie długoterminowej wizji, zdolności egzekucyjnych i dyscypliny finansowej",desc:"Sieć aptek i drogerii",topics:"Dyscyplina finansowa · Wartość długoterminowa · Koszty sieciowe",sg:"Porównywalność kosztów między placówkami, FM, energie",flag:true},
+  {name:"Piotr Michonski",company:"ROJEK DÉCOR",title:"General Manager",time:"14:40–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ukierunkowywanie wartości przedsiębiorstwa poprzez równoważenie długoterminowej wizji, zdolności egzekucyjnych i dyscypliny finansowej",desc:"Dystrybucja materiałów wykończeniowych",topics:"Zarządzanie wartością · Zdolność egzekucyjna",sg:"Widoczność kosztów operacyjnych i logistycznych",flag:false},
+  {name:"Karol Maciejewski",company:"UNILEVER",title:"Finance Senior Manager",time:"14:40–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ukierunkowywanie wartości przedsiębiorstwa poprzez równoważenie długoterminowej wizji, zdolności egzekucyjnych i dyscypliny finansowej",desc:"Globalny FMCG – finanse w Polsce",topics:"Budżetowanie · Kontrola kosztów · Dyscyplina finansowa",sg:"Identyfikacja kosztów pośrednich pod globalnym standardem",flag:true},
+  {name:"Michał Ślawski",company:"CASTORAMA POLSKA",title:"CFO – Członek Zarządu",time:"14:40–15:30",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Ukierunkowywanie wartości przedsiębiorstwa poprzez równoważenie długoterminowej wizji, zdolności egzekucyjnych i dyscypliny finansowej",desc:"Wielka sieć DIY retail (Kingfisher Group)",topics:"Dyscyplina finansowa · Architektura wartości · Koszty sieciowe",sg:"Pełna transparentność kosztów pozasprzedażowych sieci",flag:true},
+  {name:"Paweł Ochynski",company:"GREEN CELL",title:"Founder & CEO",time:"15:30–16:00",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie architektury wartości, która wyrównuje decyzje przywódcze z długoterminowymi wynikami ekonomicznymi",desc:"E-commerce – akcesoria elektroniczne i energy storage",topics:"Budowanie wartości · Decyzje przywódcze · Długoterminowe wyniki",sg:"Kontrola kosztów przy dynamicznym wzroście kategorii",flag:true},
+  {name:"Julia Besz",company:"PHILIP MORRIS INTERNATIONAL",title:"Compliance Officer PL&Baltics",time:"15:30–16:00",stage:"fin",stageFull:"Financial Leadership, Risk & Value Creation Stage",floor:"1. piętro",panel:"Określanie architektury wartości, która wyrównuje decyzje przywódcze z długoterminowymi wynikami ekonomicznymi",desc:"Globalny producent wyrobów tytoniowych",topics:"Compliance · Regulacje · Integralność decyzji",sg:"",flag:false},
+  // ═══ PEOPLE, LEADERSHIP & TECH STAGE ═══
+  {name:"Joanna Glinska",company:"SOVA ASSESSMENT",title:"CEE SOVA Assessment Partner",time:"09:00–09:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów rosną coraz szybciej, podczas gdy luki kompetencyjne i presja technologiczna obciążają menedżerów",desc:"Assessment i doradztwo HR",topics:"Kompetencje przywódcze · Assessment liderów",sg:"",flag:false},
+  {name:"Agata Shen",company:"WELLA",title:"Senior HR Director EE&MEA",time:"09:00–09:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów rosną coraz szybciej, podczas gdy luki kompetencyjne i presja technologiczna obciążają menedżerów",desc:"Globalna firma beauty (Coty Group)",topics:"Zarządzanie talentami · Kompetencje digitalne · Wsparcie menedżerów",sg:"",flag:false},
+  {name:"Dorota Kubiak",company:"EY POLSKA",title:"HR Director EY Poland & Europe Central North BU",time:"09:00–09:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów rosną coraz szybciej, podczas gdy luki kompetencyjne i presja technologiczna obciążają menedżerów",desc:"Doradztwo Big4",topics:"HR w dużej organizacji doradczej",sg:"",flag:false},
+  {name:"Rafał Myler",company:"ODGERS POLAND",title:"Partner",time:"09:00–09:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów rosną coraz szybciej, podczas gdy luki kompetencyjne i presja technologiczna obciążają menedżerów",desc:"Executive search / headhunting",topics:"Rekrutacja C-level · Luki kompetencyjne",sg:"",flag:false},
+  {name:"Kasia Duda",company:"FLUENT",title:"Associate",time:"09:00–09:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów rosną coraz szybciej, podczas gdy luki kompetencyjne i presja technologiczna obciążają menedżerów",desc:"Doradztwo HR / transformacja",topics:"Rozwój przywództwa",sg:"",flag:false},
+  {name:"Paulina Chojnacka",company:"FLUENT",title:"Associate",time:"09:30–10:00",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów stale rosną, mimo że luki w kompetencjach i presja decyzyjna przekraczają możliwości liderów",desc:"Doradztwo HR / transformacja",topics:"Przywództwo pod presją",sg:"",flag:false},
+  {name:"Magdalena Łysoń",company:"EUROWAFEL",title:"Wiceprezeska",time:"09:30–10:00",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów stale rosną, mimo że luki w kompetencjach i presja decyzyjna przekraczają możliwości liderów",desc:"Produkcja wafelków i słodyczy",topics:"Przywództwo · Luki kompetencyjne · Zarządzanie zespołami",sg:"Zarząd firmy produkcyjnej – potencjał analizy kosztów poza produkcją",flag:true},
+  {name:"Edyta Goryszewska-Szumska",company:"DR MAX",title:"Dyrektor HR",time:"09:30–10:00",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów stale rosną, mimo że luki w kompetencjach i presja decyzyjna przekraczają możliwości liderów",desc:"Sieć aptek",topics:"HR w retail farmaceutycznym · Gotowość zespołów",sg:"",flag:false},
+  {name:"Robert Prządka",company:"FIELMANN",title:"Head of HR",time:"09:30–10:00",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów stale rosną, mimo że luki w kompetencjach i presja decyzyjna przekraczają możliwości liderów",desc:"Sieć optyczna",topics:"HR w sieci retail",sg:"",flag:false},
+  {name:"Katarzyna Ellis",company:"EY",title:"Partnerka EY, Liderka Zespołu People Consulting",time:"09:30–10:00",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Oczekiwania wobec liderów stale rosną, mimo że luki w kompetencjach i presja decyzyjna przekraczają możliwości liderów",desc:"Doradztwo Big4",topics:"People consulting",sg:"",flag:false},
+  {name:"Judyta Przezdomska",company:"WESTWING",title:"Head of Logistics Operations",time:"10:00–10:40",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Przywództwo i oczekiwania nadal się rozszerzają – mimo że systemy kompetencji i modele wsparcia nie nadążają za pracą wspieraną technologią",desc:"E-commerce – wyposażenie wnętrz",topics:"Logistyka operacyjna · Transformacja technologiczna · Struktury zespołowe",sg:"Koszty logistyczne i operacyjne w e-commerce",flag:false},
+  {name:"Joanna Golenia",company:"LEROY MERLIN",title:"CHRO / People & Culture / Board Member",time:"10:00–10:40",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Przywództwo i oczekiwania nadal się rozszerzają – mimo że systemy kompetencji i modele wsparcia nie nadążają za pracą wspieraną technologią",desc:"Wielka sieć DIY retail",topics:"Kultura organizacyjna · Transformacja kompetencyjna · Board perspective",sg:"Członek zarządu dużej sieci – potencjalny wpływ na decyzje strategiczne",flag:false},
+  {name:"Kinga Jagiełło-Kulesza",company:"JERONIMO MARTINS POLSKA SA",title:"Dyrektor HR Makroregionu Wschód",time:"10:00–10:40",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Przywództwo i oczekiwania nadal się rozszerzają – mimo że systemy kompetencji i modele wsparcia nie nadążają za pracą wspieraną technologią",desc:"Biedronka – największa sieć spożywcza w Polsce",topics:"HR w wielkim retailu · Kompetencje menedżerskie",sg:"",flag:false},
+  {name:"Katarzyna Karpińska",company:"HUGO BOSS",title:"Human Resource Manager Poland",time:"10:00–10:40",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Przywództwo i oczekiwania nadal się rozszerzają – mimo że systemy kompetencji i modele wsparcia nie nadążają za pracą wspieraną technologią",desc:"Premium fashion retail",topics:"HR w luxury retail · Gotowość zespołów",sg:"",flag:false},
+  {name:"Marta Bobowska",company:"HARIS",title:"CEE HR Manager, Head of HR",time:"10:00–10:40",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Przywództwo i oczekiwania nadal się rozszerzają – mimo że systemy kompetencji i modele wsparcia nie nadążają za pracą wspieraną technologią",desc:"Doradztwo HR (ex-Reckitt)",topics:"Zarządzanie HR w regionie CEE",sg:"",flag:false},
+  {name:"Robert Wójcik",company:"HEALTHCARE INNOVATION EMBASSY",title:"Founder & CEO",time:"11:00–11:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"5× bardziej efektywne innowacje: co sprawia, że transformacja AI zaczyna działać w organizacji?",desc:"Innowacje w healthcare",topics:"Transformacja AI · Efektywność innowacji · Czynniki sukcesu",sg:"",flag:false},
+  {name:"Karolina Mendecka",company:"BAF",title:"Business Accessibility Forum Director",time:"11:30–11:50",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Inclusive Retail: dostępność przewagą konkurencyjną",desc:"Forum dostępności biznesowej",topics:"EAA compliance · Dostępność cyfrowa · Inclusive retail",sg:"",flag:false},
+  {name:"Ewa Stelmasiak",company:"WELLCULTURE INSTITUTE",title:"Founder and CEO",time:"11:50–12:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"AI zmienia przepływ pracy, podczas gdy normy kulturowe i rutyny ładu wciąż odzwierciedlają starsze modele działania",desc:"Wellbeing i kultura organizacyjna",topics:"Kultura organizacyjna i AI · Normy zespołowe",sg:"",flag:false},
+  {name:"Łukasz Wala",company:"MASPEX",title:"Head of Disruption",time:"11:50–12:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"AI zmienia przepływ pracy, podczas gdy normy kulturowe i rutyny ładu wciąż odzwierciedlają starsze modele działania",desc:"Wielki producent FMCG (Tymbark, Kubuś, Lubella)",topics:"AI w organizacji · Innowacje disruptive · Normy kulturowe",sg:"Duża firma FMCG – potencjał optymalizacji kosztów poza core",flag:false},
+  {name:"Łukasz Krajewski",company:"LOTTE WEDEL",title:"Head of Business Intelligence",time:"11:50–13:10",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"AI zmienia przepływ pracy / Zespoły pracują w środowisku AI – struktury i cykle decyzyjne",desc:"Producent czekolady i słodyczy",topics:"Business intelligence · AI w procesach · Decyzje oparte na danych",sg:"Dane do lepszych decyzji kosztowych",flag:false},
+  {name:"Tomasz Owsianik",company:"JERÓNIMO MARTINS POLSKA S.A.",title:"Dyrektor ds. Danych i Analiz HR",time:"11:50–13:10",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"AI zmienia przepływ pracy / Zespoły pracują w środowisku AI – struktury i cykle decyzyjne",desc:"Biedronka – największa sieć spożywcza w Polsce",topics:"Dane HR · Analityka · AI w procesach HR",sg:"",flag:false},
+  {name:"Marcin Kowalski",company:"BOSCH",title:"Head of Center of Excellence SAP S/4HANA",time:"11:50–12:30",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"AI zmienia przepływ pracy, podczas gdy normy kulturowe i rutyny ładu wciąż odzwierciedlają starsze modele działania",desc:"Globalny koncern technologiczny",topics:"SAP S/4HANA · Transformacja systemowa · AI",sg:"Integracja z SAP – potencjał synergii technologicznej",flag:false},
+  {name:"Dagmara Seliga Krawczyńska",company:"FLUENT",title:"Członek Zarządu HR",time:"12:30–13:10",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Zespoły pracują dziś w środowisku kształtowanym przez AI – ale ich struktury i cykle decyzyjne odzwierciedlają starsze wzorce",desc:"Doradztwo HR / transformacja",topics:"Struktury zespołowe · Cykle decyzyjne",sg:"",flag:false},
+  {name:"Piotr Bramski",company:"AVON",title:"Global Sales Analytics Lead",time:"12:30–13:10",stage:"people",stageFull:"People, Leadership & Tech Stage",floor:"Parter",panel:"Zespoły pracują dziś w środowisku kształtowanym przez AI – ale ich struktury i cykle decyzyjne odzwierciedlają starsze wzorce",desc:"Globalna firma beauty (direct selling + digital)",topics:"Sales analytics · Dane sprzedażowe · AI w sprzedaży",sg:"Analityka sprzedaży uzupełniona analityką kosztową",flag:false}
+];
+
+let currentFilter = 'all';
+let currentView = 'time';
+let currentTab = 'planned';
+let metSet = new Set(JSON.parse(localStorage.getItem('rs2026d2_met') || '[]'));
+let notesMap = JSON.parse(localStorage.getItem('rs2026d2_notes') || '{}');
+let whoMetMap = JSON.parse(localStorage.getItem('rs2026d2_who') || '{}');
+
+function getTimeSort(t) {
+  if (!t || t === 'do weryfikacji') return 9999;
+  const m = t.match(/(\d{2}):(\d{2})/);
+  return m ? parseInt(m[1])*60 + parseInt(m[2]) : 9999;
+}
+function stageLabel(s) { return {fin:'Financial',people:'People & Tech'}[s]||s; }
+function stageColor(s) { return {fin:'var(--accent-fin)',people:'var(--accent-people)'}[s]||'var(--text-muted)'; }
+function normalize(str) {
+  return str.toLowerCase().replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z');
+}
+
+function renderCard(c, idx) {
+  const isMet = metSet.has(c.name);
+  const floorClass = c.floor === '1. piętro' ? 'floor-1' : 'floor-0';
+  const floorText = c.floor === '1. piętro' ? '1 piętro' : c.floor === 'do weryfikacji' ? 'TBD' : 'Parter';
+  const savedNote = notesMap[c.name] || '';
+  const escapedName = c.name.replace(/'/g, "\\'");
+  const flagHtml = c.flag ? '<span class="flag-badge">🚩</span>' : '';
+  const day1Html = c.day1 ? '<span class="day1-badge">D1</span>' : '';
+  return `
+    <div class="card" data-stage="${c.stage}" data-name="${c.name}" id="card-${idx}">
+      <div class="stage-indicator"></div>
+      <div class="card-header">
+        <div class="card-name">${c.name}${flagHtml}${day1Html}</div>
+      </div>
+      ${c.title ? `<div class="card-title">${c.title}</div>` : ''}
+      <div class="card-company">${c.company}</div>
+      <div class="card-meta">
+        <span class="meta-tag">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          ${c.time}
+        </span>
+        <span class="meta-tag" style="color:${stageColor(c.stage)}">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          ${stageLabel(c.stage)}
+        </span>
+        <span class="meta-tag floor-badge ${floorClass}">${floorText}</span>
+      </div>
+      <div class="met-row">
+        <div class="met-cb-wrap ${isMet?'checked':''}" onclick="toggleMet('${escapedName}', ${idx})">
+          <div class="met-cb">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="met-cb-label">${isMet ? 'Spotkanie odbyte ✓' : 'Po spotkaniu'}</span>
+        </div>
+      </div>
+      <div class="who-select-wrap">
+        <span class="who-label">Kto się spotykał:</span>
+        <select class="who-select" onchange="saveWho('${escapedName}', this.value)">
+          <option value="">— wybierz —</option>
+          <option value="Tomasz" ${(whoMetMap[c.name]||'')==='Tomasz'?'selected':''}>Tomasz</option>
+          <option value="Łukasz" ${(whoMetMap[c.name]||'')==='Łukasz'?'selected':''}>Łukasz</option>
+          <option value="Obaj" ${(whoMetMap[c.name]||'')==='Obaj'?'selected':''}>Obaj</option>
+        </select>
+      </div>
+      <button class="expand-btn" onclick="toggleExpand(${idx})">
+        <span>Szczegóły</span>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="card-details">
+        ${c.desc ? `<div class="detail-section section-desc">
+          <div class="detail-label lbl-desc"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Firma</div>
+          ${c.desc}
+        </div>` : ''}
+        <div class="detail-section section-panel">
+          <div class="detail-label lbl-panel"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Panel</div>
+          ${c.panel}
+        </div>
+        ${c.topics ? `<div class="detail-section section-topics">
+          <div class="detail-label lbl-topics"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>Wątki do rozmowy</div>
+          ${c.topics}
+        </div>` : ''}
+        ${c.sg ? `<div class="detail-section section-sg">
+          <div class="detail-label lbl-sg"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>SpendGuru</div>
+          ${c.sg}
+        </div>` : ''}
+        <div class="detail-section section-notes">
+          <div class="detail-label lbl-notes"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Notatki</div>
+          <textarea class="notes-textarea" placeholder="Wpisz notatki ze spotkania…" oninput="saveNote('${escapedName}', this)" onfocus="this.parentElement.querySelector('.notes-saved').classList.remove('show')">${savedNote}</textarea>
+          <div class="notes-saved" id="ns-${idx}">Zapisano ✓</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function saveWho(name, val) {
+  whoMetMap[name] = val;
+  localStorage.setItem('rs2026d2_who', JSON.stringify(whoMetMap));
+}
+
+let noteTimers = {};
+function saveNote(name, el) {
+  clearTimeout(noteTimers[name]);
+  noteTimers[name] = setTimeout(() => {
+    notesMap[name] = el.value;
+    localStorage.setItem('rs2026d2_notes', JSON.stringify(notesMap));
+    const saved = el.parentElement.querySelector('.notes-saved');
+    if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 1500); }
+  }, 400);
+}
+
+function toggleMet(name, idx) {
+  if (metSet.has(name)) metSet.delete(name); else metSet.add(name);
+  localStorage.setItem('rs2026d2_met', JSON.stringify([...metSet]));
+  render();
+}
+
+function toggleExpand(idx) {
+  const el = document.getElementById('card-' + idx);
+  if (el) el.classList.toggle('expanded');
+}
+
+function updateStats() {
+  const all = RAW;
+  const met = all.filter(c => metSet.has(c.name)).length;
+  const flags = all.filter(c => c.flag).length;
+  document.getElementById('totalCount').textContent = all.length;
+  document.getElementById('metCount').textContent = met;
+  document.getElementById('remainCount').textContent = all.length - met;
+  document.getElementById('flagCount').textContent = flags;
+  document.getElementById('plannedBadge').textContent = all.length - met;
+  document.getElementById('doneBadge').textContent = met;
+}
+
+function getFiltered() {
+  const q = normalize(document.getElementById('searchInput').value.trim());
+  return RAW.filter(c => {
+    const isMet = metSet.has(c.name);
+    if (currentTab === 'planned' && isMet) return false;
+    if (currentTab === 'done' && !isMet) return false;
+    if (currentFilter === 'priority' && !c.flag) return false;
+    if (currentFilter !== 'all' && currentFilter !== 'priority' && c.stage !== currentFilter) return false;
+    if (q) {
+      const haystack = normalize(c.name+' '+c.company+' '+c.panel+' '+c.stageFull+' '+c.time+' '+(c.desc||'')+' '+(c.topics||'')+' '+(c.sg||''));
+      return haystack.includes(q);
+    }
+    return true;
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  updateStats();
+
+  if (filtered.length === 0) {
+    const msg = currentTab === 'done'
+      ? '<div class="empty-tab"><div class="icon">📋</div><p>Jeszcze żadne spotkanie<br>nie zostało oznaczone</p></div>'
+      : '<div class="empty-tab"><div class="icon">🎉</div><p>Wszystkie spotkania odbyte!</p></div>';
+    const q = document.getElementById('searchInput').value.trim();
+    document.getElementById('content').innerHTML = q
+      ? '<div class="no-results"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><p>Brak wyników</p></div>'
+      : msg;
+    return;
+  }
+
+  const indexMap = new Map();
+  RAW.forEach((c, i) => indexMap.set(c, i));
+
+  let html = '';
+  if (currentView === 'time') {
+    const groups = {};
+    filtered.forEach(c => { const k = c.time; if (!groups[k]) groups[k]=[]; groups[k].push(c); });
+    Object.keys(groups).sort((a,b) => getTimeSort(a)-getTimeSort(b)).forEach(key => {
+      html += `<div class="time-group"><div class="time-label"><span class="time">${key}</span><span class="line"></span></div>`;
+      groups[key].forEach(c => { html += renderCard(c, indexMap.get(c)); });
+      html += '</div>';
+    });
+  } else if (currentView === 'stage') {
+    const order = ['fin','people'];
+    const stageNames = {fin:'Financial Leadership, Risk & Value Creation',people:'People, Leadership & Tech'};
+    order.forEach(s => {
+      const items = filtered.filter(c => c.stage===s).sort((a,b) => getTimeSort(a.time)-getTimeSort(b.time));
+      if (!items.length) return;
+      html += `<div class="time-group"><div class="time-label"><span class="time" style="color:${stageColor(s)}">${stageNames[s]}</span><span class="line"></span></div>`;
+      items.forEach(c => { html += renderCard(c, indexMap.get(c)); });
+      html += '</div>';
+    });
+  } else {
+    [...filtered].sort((a,b) => a.name.localeCompare(b.name,'pl')).forEach(c => { html += renderCard(c, indexMap.get(c)); });
+  }
+
+  html += `<div class="counter">${filtered.length} kontaktów</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filter===f));
+  render();
+}
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view===v));
+  render();
+}
+function setMainTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===t));
+  render();
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

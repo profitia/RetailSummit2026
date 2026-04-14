@@ -35,9 +35,25 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* DAY NAV */
+  .day-nav {
+    display:flex; gap:0; background:#12141c;
+    border-bottom:1px solid var(--card-border);
+    padding:8px 16px; position:sticky; top:0; z-index:200;
+  }
+  .day-link {
+    flex:1; text-align:center; padding:10px 0; border-radius:10px;
+    font-size:14px; font-weight:700; text-decoration:none;
+    color:var(--text-muted); transition:all 0.2s;
+  }
+  .day-link.active {
+    background:rgba(79,140,255,0.15); color:var(--accent-sc);
+  }
+  .day-link:not(.active):active { opacity:0.7; }
+
   /* HEADER */
   .header {
-    position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 52px; z-index: 100;
     background: rgba(15,17,23,0.92);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     padding: 12px 16px 0; border-bottom: 1px solid var(--card-border);
@@ -267,6 +283,11 @@
 </style>
 </head>
 <body>
+
+<div class="day-nav">
+  <a href="index.html" class="day-link active">Dzień 1 · 14 kwi</a>
+  <a href="day2.html" class="day-link">Dzień 2 · 15 kwi</a>
+</div>
 
 <div class="header">
   <div class="header-top">
