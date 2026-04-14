@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU3BlbmRHdXJ1IFJldGFpbCBTdW1taXQiLCJzaG9ydF9uYW1lIjoiU3BlbmRHdXJ1Iiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwZjExMTciLCJ0aGVtZV9jb2xvciI6IiMwZjExMTcifQ==">
+<title>Spotkania SpendGuru — Retail Summit 2026</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --card-border: #2a2d3a;
+    --accent-sc: #4f8cff;
+    --accent-main: #a855f7;
+    --accent-eretail: #10b981;
+    --accent-fin: #f59e0b;
+    --accent-tbd: #6b7280;
+    --accent-done: #10b981;
+    --text: #e5e7eb;
+    --text-muted: #9ca3af;
+    --text-bright: #ffffff;
+    --search-bg: #1e2130;
+    --chip-bg: #1e2130;
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding-top: var(--safe-top);
+    padding-bottom: calc(var(--safe-bottom) + 16px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,17,23,0.92);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: 12px 16px 0; border-bottom: 1px solid var(--card-border);
+  }
+  .header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .header h1 { font-size:17px; font-weight:700; color:var(--text-bright); letter-spacing:-0.3px; line-height:1.3; }
+  .header .date-badge {
+    font-size:11px; color:var(--accent-sc); background:rgba(79,140,255,0.12);
+    padding:3px 9px; border-radius:12px; font-weight:600; flex-shrink:0; margin-left:8px;
+  }
+  .stats-row { display:flex; gap:14px; margin-bottom:8px; }
+  .stat { font-size:11px; color:var(--text-muted); }
+  .stat strong { color:var(--text-bright); font-size:15px; display:block; }
+
+  /* MAIN TABS */
+  .main-tabs {
+    display:flex; gap:0; background:var(--search-bg);
+    border-radius:10px; margin:0 0 8px; padding:3px;
+    border:1px solid var(--card-border);
+  }
+  .main-tab {
+    flex:1; padding:8px 0; text-align:center; font-size:13px; font-weight:600;
+    color:var(--text-muted); background:transparent; border:none;
+    border-radius:8px; cursor:pointer; transition:all 0.2s; position:relative;
+  }
+  .main-tab.active { background:var(--card-bg); color:var(--text-bright); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+  .main-tab .tab-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:18px; height:18px; border-radius:9px; font-size:10px; font-weight:700;
+    margin-left:6px; padding:0 5px;
+  }
+  .main-tab[data-tab="planned"] .tab-badge { background:rgba(79,140,255,0.2); color:var(--accent-sc); }
+  .main-tab[data-tab="done"] .tab-badge { background:rgba(16,185,129,0.2); color:var(--accent-done); }
+
+  /* SEARCH */
+  .search-wrap { position:relative; margin-bottom:8px; }
+  .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted); }
+  .search-input {
+    width:100%; background:var(--search-bg); border:1px solid var(--card-border);
+    border-radius:12px; padding:10px 12px 10px 36px; font-size:15px;
+    color:var(--text); outline:none; transition:border-color 0.2s;
+  }
+  .search-input:focus { border-color:var(--accent-sc); }
+  .search-input::placeholder { color:var(--text-muted); }
+
+  /* CHIPS */
+  .chips-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:0 -16px; padding:0 16px 8px; }
+  .chips-scroll::-webkit-scrollbar { display:none; }
+  .chips { display:flex; gap:8px; white-space:nowrap; }
+  .chip {
+    display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+    border-radius:20px; font-size:12px; font-weight:600;
+    background:var(--chip-bg); border:1px solid var(--card-border);
+    color:var(--text-muted); cursor:pointer; transition:all 0.2s; flex-shrink:0;
+  }
+  .chip.active { color:var(--text-bright); border-color:transparent; }
+  .chip .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .chip[data-filter="all"].active { background:#2a3050; }
+  .chip[data-filter="sc"] .dot { background:var(--accent-sc); }
+  .chip[data-filter="sc"].active { background:rgba(79,140,255,0.18); border-color:rgba(79,140,255,0.3); }
+  .chip[data-filter="main"] .dot { background:var(--accent-main); }
+  .chip[data-filter="main"].active { background:rgba(168,85,247,0.18); border-color:rgba(168,85,247,0.3); }
+  .chip[data-filter="eretail"] .dot { background:var(--accent-eretail); }
+  .chip[data-filter="eretail"].active { background:rgba(16,185,129,0.18); border-color:rgba(16,185,129,0.3); }
+  .chip[data-filter="fin"] .dot { background:var(--accent-fin); }
+  .chip[data-filter="fin"].active { background:rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.3); }
+
+  /* VIEW TOGGLE */
+  .view-toggle { display:flex; gap:0; margin:8px 16px 0; background:var(--search-bg); border-radius:10px; padding:3px; border:1px solid var(--card-border); }
+  .view-btn {
+    flex:1; padding:7px 0; text-align:center; font-size:12px; font-weight:600;
+    color:var(--text-muted); background:transparent; border:none;
+    border-radius:8px; cursor:pointer; transition:all 0.2s;
+  }
+  .view-btn.active { background:var(--card-bg); color:var(--text-bright); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+
+  /* CONTENT */
+  .content { padding:8px 16px 32px; }
+
+  /* TIME GROUPS */
+  .time-group { margin-top:16px; }
+  .time-label {
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+    position:sticky; top:200px; z-index:10;
+    background:rgba(15,17,23,0.85); backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px); padding:6px 0;
+  }
+  .time-label .time { font-size:14px; font-weight:700; color:var(--text-bright); white-space:nowrap; }
+  .time-label .line { flex:1; height:1px; background:var(--card-border); }
+
+  /* CARD */
+  .card {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:14px; padding:14px; margin-bottom:10px;
+    transition:transform 0.15s, box-shadow 0.15s;
+    position:relative; overflow:hidden;
+  }
+  .card:active { transform:scale(0.98); }
+  .card .stage-indicator { position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:14px 0 0 14px; }
+  .card[data-stage="sc"] .stage-indicator { background:var(--accent-sc); }
+  .card[data-stage="main"] .stage-indicator { background:var(--accent-main); }
+  .card[data-stage="eretail"] .stage-indicator { background:var(--accent-eretail); }
+  .card[data-stage="fin"] .stage-indicator { background:var(--accent-fin); }
+  .card[data-stage="tbd"] .stage-indicator { background:var(--accent-tbd); }
+
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; padding-left:8px; padding-right:30px; }
+  .card-name { font-size:15px; font-weight:700; color:var(--text-bright); line-height:1.3; }
+  .card-company { font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:8px; padding-left:8px; }
+  .card-meta { display:flex; flex-wrap:wrap; gap:6px; padding-left:8px; }
+  .meta-tag {
+    display:inline-flex; align-items:center; gap:4px; font-size:11px;
+    color:var(--text-muted); background:rgba(255,255,255,0.04);
+    padding:3px 8px; border-radius:6px;
+  }
+  .meta-tag svg { width:12px; height:12px; flex-shrink:0; }
+  .floor-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
+  .floor-0 { background:rgba(79,140,255,0.12); color:var(--accent-sc); }
+  .floor-1 { background:rgba(245,158,11,0.12); color:var(--accent-fin); }
+
+  /* MET CHECKBOX */
+  .met-row {
+    display:flex; align-items:center; gap:8px; margin-top:10px; padding-left:8px;
+  }
+  .met-cb-wrap {
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    padding:6px 12px; border-radius:10px; border:1px solid var(--card-border);
+    background:rgba(255,255,255,0.02); transition:all 0.2s; flex:1;
+  }
+  .met-cb-wrap:active { transform:scale(0.97); }
+  .met-cb-wrap.checked {
+    background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3);
+  }
+  .met-cb {
+    width:22px; height:22px; border-radius:6px; border:2px solid var(--card-border);
+    background:transparent; flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; transition:all 0.2s;
+  }
+  .met-cb svg { width:14px; height:14px; color:transparent; }
+  .met-cb-wrap.checked .met-cb { background:var(--accent-done); border-color:var(--accent-done); }
+  .met-cb-wrap.checked .met-cb svg { color:#fff; }
+  .met-cb-label { font-size:13px; font-weight:600; color:var(--text-muted); transition:color 0.2s; }
+  .met-cb-wrap.checked .met-cb-label { color:var(--accent-done); }
+
+  /* EXPAND */
+  .expand-btn {
+    display:flex; align-items:center; justify-content:center;
+    padding:6px 0 0; margin-left:8px; background:none; border:none;
+    color:var(--text-muted); font-size:11px; cursor:pointer; gap:4px;
+  }
+  .expand-btn svg { width:14px; height:14px; transition:transform 0.2s; }
+  .card.expanded .expand-btn svg { transform:rotate(180deg); }
+
+  /* DETAILS */
+  .card-details { margin-top:8px; padding-left:8px; display:none; }
+  .card.expanded .card-details { display:block; }
+  .detail-section {
+    margin-top:8px; padding:8px 10px 8px 12px;
+    background:rgba(255,255,255,0.03); border-radius:8px;
+    font-size:12px; color:var(--text-muted); line-height:1.5;
+    border-left:2px solid var(--card-border);
+  }
+  .detail-section.section-desc { border-left-color:#6366f1; }
+  .detail-section.section-topics { border-left-color:#f59e0b; }
+  .detail-section.section-sg { border-left-color:#10b981; }
+  .detail-section.section-notes { border-left-color:#ec4899; background:rgba(236,72,153,0.04); }
+  .detail-label {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.5px; margin-bottom:4px; display:flex; align-items:center; gap:4px;
+  }
+  .detail-label.lbl-panel { color:#9ca3af; }
+  .detail-label.lbl-desc { color:#818cf8; }
+  .detail-label.lbl-topics { color:#fbbf24; }
+  .detail-label.lbl-sg { color:#34d399; }
+  .detail-label.lbl-notes { color:#f472b6; }
+  .detail-label svg { width:11px; height:11px; }
+
+  /* NOTES */
+  .notes-textarea {
+    width:100%; min-height:60px; background:rgba(255,255,255,0.03);
+    border:1px solid var(--card-border); border-radius:8px;
+    padding:8px 10px; font-size:13px; color:var(--text);
+    font-family:inherit; resize:vertical; outline:none;
+    transition:border-color 0.2s;
+  }
+  .notes-textarea:focus { border-color:#ec4899; }
+  .notes-textarea::placeholder { color:var(--text-muted); font-size:12px; }
+  .notes-saved {
+    font-size:10px; color:#f472b6; margin-top:4px; opacity:0;
+    transition:opacity 0.3s;
+  }
+  .notes-saved.show { opacity:1; }
+
+  /* MISC */
+  .no-results { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .no-results svg { width:48px; height:48px; margin-bottom:12px; opacity:0.3; }
+  .no-results p { font-size:14px; }
+  .counter { font-size:11px; color:var(--text-muted); text-align:center; padding:16px 0 0; }
+
+  .empty-tab {
+    text-align:center; padding:60px 20px; color:var(--text-muted);
+  }
+  .empty-tab .icon { font-size:40px; margin-bottom:12px; }
+  .empty-tab p { font-size:14px; line-height:1.5; }
+
+  @media (min-width:768px) {
+    .content { max-width:480px; margin:0 auto; }
+    .header > * { max-width:480px; margin-left:auto; margin-right:auto; }
+    .view-toggle { max-width:480px; margin-left:auto; margin-right:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🎯 Spotkania SpendGuru<br>Retail Summit 2026</h1>
+    <span class="date-badge">14 kwietnia</span>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><strong id="totalCount">0</strong>Kontakty</div>
+    <div class="stat"><strong id="metCount">0</strong>Odbyte</div>
+    <div class="stat"><strong id="remainCount">0</strong>Pozostało</div>
+  </div>
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="planned" onclick="setMainTab('planned')">
+      Zaplanowane <span class="tab-badge" id="plannedBadge">0</span>
+    </button>
+    <button class="main-tab" data-tab="done" onclick="setMainTab('done')">
+      Odbyte <span class="tab-badge" id="doneBadge">0</span>
+    </button>
+  </div>
+  <div class="search-wrap">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input type="text" class="search-input" id="searchInput" placeholder="Szukaj osoby, firmy, tematu…" autocomplete="off" autocorrect="off">
+  </div>
+  <div class="chips-scroll">
+    <div class="chips">
+      <div class="chip active" data-filter="all" onclick="setFilter('all')">Wszystkie</div>
+      <div class="chip" data-filter="sc" onclick="setFilter('sc')"><span class="dot"></span>Supply Chain</div>
+      <div class="chip" data-filter="main" onclick="setFilter('main')"><span class="dot"></span>Main Stage</div>
+      <div class="chip" data-filter="eretail" onclick="setFilter('eretail')"><span class="dot"></span>eRetail</div>
+      <div class="chip" data-filter="fin" onclick="setFilter('fin')"><span class="dot"></span>Financial</div>
+    </div>
+  </div>
+</div>
+
+<div class="view-toggle">
+  <button class="view-btn active" data-view="time" onclick="setView('time')">Wg czasu</button>
+  <button class="view-btn" data-view="stage" onclick="setView('stage')">Wg sceny</button>
+  <button class="view-btn" data-view="alpha" onclick="setView('alpha')">A–Z</button>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const RAW = [
+  {name:"Ireneusz Kozber",company:"MILLANO",time:"09:00–09:30",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Popyt na automatyzację przyspiesza, ale gotowość magazynów pozostaje nierówna",desc:"Dystrybucja FMCG (m.in. alkohole), operacje magazynowo-logistyczne",topics:"Rosnące koszty logistyki, magazynów, usług pomocniczych · Presja kosztowa poza towarem",sg:"Identyfikacja rozjazdów cenowych w transporcie i usługach logistycznych"},
+  {name:"Monika Kurowska-Olczak",company:"FANEX",time:"09:00–09:30",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Popyt na automatyzację przyspiesza, ale gotowość magazynów pozostaje nierówna",desc:"Produkcja sosów i dodatków dla HoReCa i retail",topics:"Koszty usług i opakowań poza surowcem · Utrzymanie marży bez zmian produkcyjnych",sg:"Analiza wydatków na transport, opakowania wtórne, serwis"},
+  {name:"Przemysław Bryk",company:"NETTO",time:"09:00–09:30",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Popyt na automatyzację przyspiesza, ale gotowość magazynów pozostaje nierówna",desc:"Sieć dyskontów spożywczych",topics:"Rozproszone koszty sklepów i regionów · Brak porównywalności kosztowej",sg:"Benchmark kosztów usług między regionami i punktami"},
+  {name:"Łukasz Jatta",company:"MIEBACH CONSULTING",time:"10:10–10:30",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Zautomatyzowane centrum dystrybucji dla sieci convenience – innowacyjna koncepcja i wyzwania realizacji",desc:"Doradztwo strategiczne w supply chain",topics:"Twarde dane zamiast estymacji · Skrócenie analiz",sg:"Narzędzie diagnostyczne dla projektów doradczych"},
+  {name:"Maciej Zdonek",company:"BRICOMARCHE",time:"10:30–11:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Ryzyko automatyzacji koncentruje się tam, gdzie spotykają się szczyty, wyjątki i ludzie",desc:"Sieć supermarketów (spożywcze + przemysłowe)",topics:"Wysokie koszty usług lokalnych",sg:"Benchmarking wydatków między regionami"},
+  {name:"Krzysztof Niciejewski",company:"MAKRO CASH AND CARRY POLSKA S.A.",time:"10:30–11:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Ryzyko automatyzacji koncentruje się tam, gdzie spotykają się szczyty, wyjątki i ludzie",desc:"Hurtownie cash & carry",topics:"Logistyka, energia, obiekty",sg:"Pełna widoczność kosztów operacyjnych"},
+  {name:"Wojciech Maćkowiak",company:"ZIKO APTEKA",time:"11:50–12:20",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Spowolnienie realizacji, gdy przekazania między planowaniem, logistyką i dystrybucją nie mają jasno określonych punktów kontrolnych",desc:"Sieć aptek",topics:"Koszty punktów sprzedaży",sg:"Porównania kosztowe placówek"},
+  {name:"Katarzyna Fenslau",company:"ZOOPLUS",time:"12:40–13:10",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Opóźnienie decyzyjne utrzymuje się, gdy poziom dojrzałości integracji jest różny w całej sieci",desc:"E-commerce zoologiczny",topics:"Fulfillment, IT, marketing",sg:"Dyscyplina kosztowa przy wzroście"},
+  {name:"Anna Mandes",company:"SKF GROUP",time:"12:40–13:10",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Opóźnienie decyzyjne utrzymuje się, gdy poziom dojrzałości integracji jest różny w całej sieci",desc:"Produkcja przemysłowa",topics:"Utrzymanie ruchu, serwis",sg:"Standaryzacja vendorów"},
+  {name:"Maciej Gawroński",company:"IDKFA IDCLIP FOZZY GROUP",time:"14:00–14:40",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Zmienność koncentruje się tam, gdzie magazyny, doki i przewoźnicy wielokrotnie spotykają się i przecinają swoje ścieżki",desc:"Retail i dystrybucja",topics:"Płynność i koszty operacyjne",sg:"Przejrzystość wydatków"},
+  {name:"Krzysztof Janczukowicz",company:"MIELE",time:"15:20–16:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Ryzyko realizacji kumuluje się w miejscach, w których zakłócenia są absorbowane przez jednostki",desc:"AGD premium",topics:"Serwis, logistyka, biura",sg:"Kontrola kosztów wsparcia"},
+  {name:"Maciej Hope",company:"SERPOL COSMETICS",time:"15:20–16:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Ryzyko realizacji kumuluje się w miejscach, w których zakłócenia są absorbowane przez jednostki",desc:"Produkcja kosmetyków",topics:"Opakowania i usługi",sg:"Szybkie identyfikacje oszczędności"},
+  {name:"Adrian Trąbka",company:"ADIKAM SP. Z O.O.",time:"15:20–16:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Ryzyko realizacji kumuluje się w miejscach, w których zakłócenia są absorbowane przez jednostki",desc:"Dystrybucja / handel",topics:"Koszty operacyjne",sg:"Porządkowanie spendu"},
+  {name:"Tomasz Zarzycki",company:"NO LIMIT",time:"16:30–17:00",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Luki odpowiedzialności pogłębiają się w miarę jak nierozwiązane wyjątki kumulują się w ciągu dnia",desc:"Logistyka i transport",topics:"Marżowość operacji",sg:"Dane kosztowe usług"},
+  {name:"Adam Kostrzewski",company:"GOURMET FOODS SP. Z O.O.",time:"17:00–17:30",stage:"sc",stageFull:"Supply Chain Plenary Stage",floor:"Parter",panel:"Stabilność operacyjna wymaga przeniesienia zmienności z ludzi na systemy",desc:"Dystrybucja żywności premium",topics:"Koszty operacyjne",sg:"Analiza struktury wydatków"},
+  {name:"Agnieszka Mosurek-Zava",company:"DOUGLAS POLAND & CEE",time:"09:20–09:50",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"O pozycji firmy decyduje nie ambicja, lecz to, co organizacja jest w stanie udźwignąć",desc:"Sieć perfumerii omnichannel (offline + e-commerce)",topics:"Wysokie koszty omnichannel · Kontrola zamiast cięć",sg:"Jeden widok na cały spend marketingowo-technologiczny"},
+  {name:"Kiril Marinov",company:"HENKEL",time:"09:20–09:50",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"O pozycji firmy decyduje nie ambicja, lecz to, co organizacja jest w stanie udźwignąć",desc:"Detergenty, chemia, beauty (produkcja globalna)",topics:"Złożoność kosztowa dużej organizacji · Standaryzacja",sg:"Porządkowanie i normalizacja danych zakupowych"},
+  {name:"Krzysztof Tokarz",company:"GRUPA SPECJAŁ",time:"09:20–09:50",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"O pozycji firmy decyduje nie ambicja, lecz to, co organizacja jest w stanie udźwignąć",desc:"Hurtowa dystrybucja FMCG",topics:"Transport, flota, magazyny · Koszty skali",sg:"Analiza usług logistycznych i towarzyszących"},
+  {name:"Monika Kolaszyńska",company:"SUPER-PHARM",time:"09:20–09:50",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"O pozycji firmy decyduje nie ambicja, lecz to, co organizacja jest w stanie udźwignąć",desc:"Sieć aptek i drogerii",topics:"Różnice kosztowe między placówkami · Koszty sieciowe",sg:"Porównywalność kosztów apteka-apteka"},
+  {name:"Mariusz Makowski",company:"MARS WRIGLEY",time:"09:20–09:50",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"O pozycji firmy decyduje nie ambicja, lecz to, co organizacja jest w stanie udźwignąć",desc:"Produkcja słodyczy i FMCG",topics:"Koszty wspierające sprzedaż · Bez ryzyka dla core dostawców",sg:"Identyfikacja kosztów drugiej linii"},
+  {name:"Wojciech Normand",company:"DEICHMANN-OBUWIE",time:"10:55–11:30",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Łączenie systemów nie tylko zwiększa efektywność – ujawnia też miejsca podatne na ryzyko",desc:"Sieć obuwnicza retail",topics:"Koszty sklepów i FM",sg:"Standaryzacja wydatków placówek"},
+  {name:"Remigiusz Czernecki",company:"GRUPA KAPITAŁOWA SPECJAŁ",time:"12:40–13:20",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Wzrost jest w centrum uwagi. Ale wartość pozostaje w podstawowym biznesie",desc:"Hurt FMCG",topics:"Koszty logistyczne na skali",sg:"Analiza rozjazdów kosztowych"},
+  {name:"Robert Rękas",company:"LEWIATAN",time:"12:40–13:20",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Wzrost jest w centrum uwagi. Ale wartość pozostaje w podstawowym biznesie",desc:"Franczyzowa sieć sklepów",topics:"Różnice kosztów franczyz",sg:"Porównywalność w sieci"},
+  {name:"Marcin Kuś",company:"BAHLSEN POLAND",time:"15:45–16:30",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Zmiana stała się normą. Stabilność – niekoniecznie",desc:"Słodycze, FMCG",topics:"Koszty wspierające sprzedaż",sg:"Analiza wydatków non-core"},
+  {name:"Diana Okular",company:"HOMLA / N2H SP. Z O.O.",time:"17:20–18:00",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Czekanie na pewność nie jest już bezpieczną strategią",desc:"Retail wnętrzarski + e-commerce",topics:"Koszty wzrostu",sg:"Utrzymanie dyscypliny kosztowej"},
+  {name:"Marcin Czyczerski",company:"GCG PARTNERS",time:"17:20–18:00",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Czekanie na pewność nie jest już bezpieczną strategią",desc:"Doradztwo strategiczne",topics:"Narzędzia oparte na danych",sg:"Wsparcie projektów doradczych"},
+  {name:"Katarzyna Zielińska",company:"SMYK",time:"17:20–18:00",stage:"main",stageFull:"Main Stage (Strategic Leadership)",floor:"Parter",panel:"Czekanie na pewność nie jest już bezpieczną strategią",desc:"Retail dziecięcy",topics:"Koszty sieci i e-commerce",sg:"Porównanie kosztów kanałów"},
+  {name:"Ewa Weinar",company:"NATURA",time:"10:10–10:40",stage:"eretail",stageFull:"eRetail Strategies & Data Management Stage",floor:"Parter",panel:"Od ambicji do ryzyka: jak liderzy eCommerce w CEE decydują o wyjściu poza rynek krajowy",desc:"Sieć drogerii i e-commerce",topics:"Koszty omnichannel i marketingu",sg:"Zbiorcza kontrola wydatków digital"},
+  {name:"Andrzej Wierzchoń",company:"OCEANIC",time:"do weryfikacji",stage:"eretail",stageFull:"eRetail Strategies & Data Management Stage",floor:"Parter",panel:"do weryfikacji na stronie d1-eretail-data.retail-summit.com",desc:"Kosmetyki i chemia gospodarcza",topics:"Koszty produkcji i usług",sg:"Analiza wydatków poza produkcją"},
+  {name:"Tomasz Wawszczyk",company:"LG ELECTRONICS",time:"12:20–13:00",stage:"eretail",stageFull:"eRetail Strategies & Data Management Stage",floor:"Parter",panel:"Odbudowa dyscypliny ekonomicznej: jak liderzy eCommerce w CEE odbudowują rentowność bez hamowania wzrostu",desc:"Elektronika użytkowa i AGD",topics:"Dane sprzedażowe vs kosztowe",sg:"Zarządzanie kosztami jak revenue"},
+  {name:"Magdalena Wiśniewska",company:"BRICOMARCHE",time:"16:30–17:00",stage:"eretail",stageFull:"eRetail Strategies & Data Management Stage",floor:"Parter",panel:"Kto zarządza cyfrową półką: odpowiedzialność, nadzór i zaufanie w skali",desc:"Retail DIY i spożywczy",topics:"Koszty digital i IT",sg:"Kontrola wydatków online"},
+  {name:"Marzena Łukasiak",company:"TRIUMPH",time:"16:30–17:00",stage:"eretail",stageFull:"eRetail Strategies & Data Management Stage",floor:"Parter",panel:"Kto zarządza cyfrową półką: odpowiedzialność, nadzór i zaufanie w skali",desc:"Globalna marka bielizny",topics:"Marketing lokalny vs centrala",sg:"Jedno źródło prawdy o kosztach"},
+  {name:"Marcin Grabowski",company:"VELVET CARE",time:"09:00–09:30",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Odbudowa siły marży przy jednoczesnym zarządzaniu zależnością od promocji, presją kosztów i wymogami przejrzystości cen",desc:"Produkcja artykułów higienicznych i papierowych",topics:"Presja marży, inflacja kosztów pośrednich · EBITDA bez CAPEX",sg:"Pełna transparentność kosztów pozaprodukcyjnych"},
+  {name:"Adam Niesterok",company:"KRAFT HEINZ",time:"09:00–09:30",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Odbudowa siły marży przy jednoczesnym zarządzaniu zależnością od promocji, presją kosztów i wymogami przejrzystości cen",desc:"Globalny producent żywności FMCG",topics:"Globalne kontrakty vs lokalna efektywność · Koszty non-core",sg:"Wykrywanie lokalnych odstępstw od umów globalnych"},
+  {name:"Wojciech Jankowski",company:"ELTROX SP. Z O.O.",time:"10:10–10:40",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Gdy presja promocyjna rośnie szybciej niż marża, a rentowność kategorii wymaga nowych zasad kontroli",desc:"E-commerce (elektronika, smart home)",topics:"Chaotyczny wzrost kosztów",sg:"Kontrola kosztów IT, performance, logistyki"},
+  {name:"Michał Olech",company:"LUBA SP. Z O.O.",time:"11:00–11:30",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Równoważenie rozwoju marek własnych, ekonomiki dostawców i integralności cenowej w celu odbudowy rentowności kategorii",desc:"Produkcja chemii gospodarczej",topics:"Opakowania, serwis, usługi",sg:"Dane do rozmów z dostawcami"},
+  {name:"Krzysztof Łątka",company:"ORGANIC WATER SP. Z O.O.",time:"11:30–12:00",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Gdy wzrost marek własnych przekształca drabinę wartości – rentowność kategorii zależy od jaśniejszego podziału ról i dyscypliny cenowej",desc:"Produkcja napojów",topics:"Dystrybucja i koszty wsparcia",sg:"Identyfikacja wydatków ukrytych"},
+  {name:"Justyna Zasowska",company:"OBI POLSKA",time:"12:30–13:00",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Poprawa zarządzania gotówką i kontroli płynności przy jednoczesnym zarządzaniu zmiennością kapitału obrotowego",desc:"Retail DIY",topics:"Koszty obiektowe i usługowe",sg:"Kontrola lokalnych kontraktów"},
+  {name:"Robert Knapczyk",company:"SHELL POLSKA",time:"14:00–14:30",stage:"fin",stageFull:"Financial Performance & Business Management Stage",floor:"1. piętro",panel:"Koordynowanie strategii płynnościowej, decyzji finansowania i zasad kontroli ryzyka w celu wzmocnienia stabilności finansowej",desc:"Paliwa i retail stacyjny",topics:"Koszty obiektowe",sg:"FM, energia, usługi"},
+  {name:"Zofia Zaczek",company:"EURO-NET SP. Z O.O.",time:"do weryfikacji",stage:"tbd",stageFull:"do weryfikacji",floor:"do weryfikacji",panel:"do weryfikacji na stronie retail-summit.com",desc:"",topics:"",sg:""},
+  {name:"Michał Chmielewski",company:"SAWEX FOODS",time:"do weryfikacji",stage:"tbd",stageFull:"do weryfikacji",floor:"do weryfikacji",panel:"do weryfikacji na stronie retail-summit.com",desc:"",topics:"",sg:""}
+];
+
+let currentFilter = 'all';
+let currentView = 'time';
+let currentTab = 'planned';
+let metSet = new Set(JSON.parse(localStorage.getItem('rs2026_met') || '[]'));
+let notesMap = JSON.parse(localStorage.getItem('rs2026_notes') || '{}');
+
+function getTimeSort(t) {
+  if (!t || t === 'do weryfikacji') return 9999;
+  const m = t.match(/(\d{2}):(\d{2})/);
+  return m ? parseInt(m[1])*60 + parseInt(m[2]) : 9999;
+}
+function stageLabel(s) { return {sc:'Supply Chain',main:'Main Stage',eretail:'eRetail',fin:'Financial',tbd:'TBD'}[s]||s; }
+function stageColor(s) { return {sc:'var(--accent-sc)',main:'var(--accent-main)',eretail:'var(--accent-eretail)',fin:'var(--accent-fin)',tbd:'var(--accent-tbd)'}[s]||'var(--text-muted)'; }
+function normalize(str) {
+  return str.toLowerCase().replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ź/g,'z').replace(/ż/g,'z');
+}
+
+function renderCard(c, idx) {
+  const isMet = metSet.has(c.name);
+  const floorClass = c.floor === '1. piętro' ? 'floor-1' : 'floor-0';
+  const floorText = c.floor === '1. piętro' ? '1 piętro' : c.floor === 'do weryfikacji' ? 'TBD' : 'Parter';
+  const savedNote = notesMap[c.name] || '';
+  const escapedName = c.name.replace(/'/g, "\\'");
+  return `
+    <div class="card" data-stage="${c.stage}" data-name="${c.name}" id="card-${idx}">
+      <div class="stage-indicator"></div>
+      <div class="card-header">
+        <div class="card-name">${c.name}</div>
+      </div>
+      <div class="card-company">${c.company}</div>
+      <div class="card-meta">
+        <span class="meta-tag">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          ${c.time}
+        </span>
+        <span class="meta-tag" style="color:${stageColor(c.stage)}">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          ${stageLabel(c.stage)}
+        </span>
+        <span class="meta-tag floor-badge ${floorClass}">${floorText}</span>
+      </div>
+      <div class="met-row">
+        <div class="met-cb-wrap ${isMet?'checked':''}" onclick="toggleMet('${escapedName}', ${idx})">
+          <div class="met-cb">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <span class="met-cb-label">${isMet ? 'Spotkanie odbyte ✓' : 'Po spotkaniu'}</span>
+        </div>
+      </div>
+      <button class="expand-btn" onclick="toggleExpand(${idx})">
+        <span>Szczegóły</span>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="card-details">
+        ${c.desc ? `<div class="detail-section section-desc">
+          <div class="detail-label lbl-desc"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Firma</div>
+          ${c.desc}
+        </div>` : ''}
+        <div class="detail-section section-panel">
+          <div class="detail-label lbl-panel"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Panel</div>
+          ${c.panel}
+        </div>
+        ${c.topics ? `<div class="detail-section section-topics">
+          <div class="detail-label lbl-topics"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>Wątki do rozmowy</div>
+          ${c.topics}
+        </div>` : ''}
+        ${c.sg ? `<div class="detail-section section-sg">
+          <div class="detail-label lbl-sg"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>SpendGuru</div>
+          ${c.sg}
+        </div>` : ''}
+        <div class="detail-section section-notes">
+          <div class="detail-label lbl-notes"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>Notatki</div>
+          <textarea class="notes-textarea" placeholder="Wpisz notatki ze spotkania…" oninput="saveNote('${escapedName}', this)" onfocus="this.parentElement.querySelector('.notes-saved').classList.remove('show')">${savedNote}</textarea>
+          <div class="notes-saved" id="ns-${idx}">Zapisano ✓</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+let noteTimers = {};
+function saveNote(name, el) {
+  clearTimeout(noteTimers[name]);
+  noteTimers[name] = setTimeout(() => {
+    notesMap[name] = el.value;
+    localStorage.setItem('rs2026_notes', JSON.stringify(notesMap));
+    const saved = el.parentElement.querySelector('.notes-saved');
+    if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 1500); }
+  }, 400);
+}
+
+function toggleMet(name, idx) {
+  if (metSet.has(name)) metSet.delete(name); else metSet.add(name);
+  localStorage.setItem('rs2026_met', JSON.stringify([...metSet]));
+  render();
+}
+
+function toggleExpand(idx) {
+  const el = document.getElementById('card-' + idx);
+  if (el) el.classList.toggle('expanded');
+}
+
+function updateStats() {
+  const all = RAW;
+  const met = all.filter(c => metSet.has(c.name)).length;
+  document.getElementById('totalCount').textContent = all.length;
+  document.getElementById('metCount').textContent = met;
+  document.getElementById('remainCount').textContent = all.length - met;
+  document.getElementById('plannedBadge').textContent = all.length - met;
+  document.getElementById('doneBadge').textContent = met;
+}
+
+function getFiltered() {
+  const q = normalize(document.getElementById('searchInput').value.trim());
+  return RAW.filter(c => {
+    const isMet = metSet.has(c.name);
+    if (currentTab === 'planned' && isMet) return false;
+    if (currentTab === 'done' && !isMet) return false;
+    if (currentFilter !== 'all' && c.stage !== currentFilter) return false;
+    if (q) {
+      const haystack = normalize(c.name+' '+c.company+' '+c.panel+' '+c.stageFull+' '+c.time+' '+(c.desc||'')+' '+(c.topics||'')+' '+(c.sg||''));
+      return haystack.includes(q);
+    }
+    return true;
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  updateStats();
+
+  if (filtered.length === 0) {
+    const msg = currentTab === 'done'
+      ? '<div class="empty-tab"><div class="icon">📋</div><p>Jeszcze żadne spotkanie<br>nie zostało oznaczone</p></div>'
+      : '<div class="empty-tab"><div class="icon">🎉</div><p>Wszystkie spotkania odbyte!</p></div>';
+    const q = document.getElementById('searchInput').value.trim();
+    document.getElementById('content').innerHTML = q
+      ? '<div class="no-results"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><p>Brak wyników</p></div>'
+      : msg;
+    return;
+  }
+
+  const indexMap = new Map();
+  RAW.forEach((c, i) => indexMap.set(c, i));
+
+  let html = '';
+  if (currentView === 'time') {
+    const groups = {};
+    filtered.forEach(c => { const k = c.time; if (!groups[k]) groups[k]=[]; groups[k].push(c); });
+    Object.keys(groups).sort((a,b) => getTimeSort(a)-getTimeSort(b)).forEach(key => {
+      html += `<div class="time-group"><div class="time-label"><span class="time">${key}</span><span class="line"></span></div>`;
+      groups[key].forEach(c => { html += renderCard(c, indexMap.get(c)); });
+      html += '</div>';
+    });
+  } else if (currentView === 'stage') {
+    const order = ['sc','main','eretail','fin','tbd'];
+    const stageNames = {sc:'Supply Chain Plenary Stage',main:'Main Stage (Strategic Leadership)',eretail:'eRetail Strategies & Data',fin:'Financial Performance',tbd:'Do weryfikacji'};
+    order.forEach(s => {
+      const items = filtered.filter(c => c.stage===s).sort((a,b) => getTimeSort(a.time)-getTimeSort(b.time));
+      if (!items.length) return;
+      html += `<div class="time-group"><div class="time-label"><span class="time" style="color:${stageColor(s)}">${stageNames[s]}</span><span class="line"></span></div>`;
+      items.forEach(c => { html += renderCard(c, indexMap.get(c)); });
+      html += '</div>';
+    });
+  } else {
+    [...filtered].sort((a,b) => a.name.localeCompare(b.name,'pl')).forEach(c => { html += renderCard(c, indexMap.get(c)); });
+  }
+
+  html += `<div class="counter">${filtered.length} kontaktów</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filter===f));
+  render();
+}
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view===v));
+  render();
+}
+function setMainTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===t));
+  render();
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>
